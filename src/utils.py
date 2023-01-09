@@ -1,6 +1,13 @@
 import os
 import json
 
+def set_mode(mode):
+    with open("./bot_logs.json", "r") as f:
+        json_ = json.load(f)
+    json_.update({"mode": mode})
+    with open("./bot_logs.json", "w") as f:
+        json.dump(json_, f)
+
 
 def start_train(model=None):
     os.system(f"sh ./launchers/launch_{model}.sh")

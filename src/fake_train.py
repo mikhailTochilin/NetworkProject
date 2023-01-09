@@ -12,12 +12,22 @@ parser.add_argument('-e','--experiment', help='current_experiment')
 EXCEPTION_PERIOD = random.uniform(5, 10)
 
 
+
+
 if __name__ == '__main__':
     args = parser.parse_args()
     print(f"\nStart train {args.experiment.upper()}\n")
 
-    start_time = time.time()
+    # Telegram Stuff
+    with open("./bot_logs.json", "r") as f:
+        json_ = json.load(f)
+    json_.update({"cur_model": args.experiment})
+    with open("./bot_logs.json", "w") as f:
+        json.dump(json_, f)
 
+
+
+    start_time = time.time()
     try:
         while True:
             time.sleep(2)
@@ -31,6 +41,10 @@ if __name__ == '__main__':
         json_.update({"error": repr(e)})
         with open("./bot_logs.json", "w") as f:
             json.dump(json_, f)
+
+
+
+
 
 
 

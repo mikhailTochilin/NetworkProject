@@ -20,8 +20,13 @@ large_models = ["dtln_512_test", "dtln_simple_512_test"]
 # Begin menu
 inline_btn_1 = InlineKeyboardButton('Show', callback_data='button_show')
 inline_btn_2 = InlineKeyboardButton('Start', callback_data='button_start')
-inline_kb = InlineKeyboardMarkup().add(inline_btn_1).add(inline_btn_2)
+inline_btn_3 = InlineKeyboardButton('Mode', callback_data='button_mode')
+inline_kb = InlineKeyboardMarkup().add(inline_btn_1).add(inline_btn_2).add(inline_btn_3)
 
+# Mode menu
+inline_btn_manual = InlineKeyboardButton('Manual', callback_data='button_manual')
+inline_btn_auto_restart = InlineKeyboardButton('Auto-restart', callback_data='button_auto_restart')
+inline_kb_mode = InlineKeyboardMarkup().add(inline_btn_manual).add(inline_btn_auto_restart)
 
 # Models size show menu
 inline_btn_large_show = InlineKeyboardButton('Large', callback_data='button_large_show')

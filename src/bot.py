@@ -14,13 +14,9 @@ from aiogram import Bot, Dispatcher, executor, types
 from config import TG_TOKEN, API_LINK, UPDATE_PERIOD, low_models, large_models, \
     inline_kb, inline_kb_models_size_show, inline_kb_low_models_show, \
     inline_kb_large_models_show, inline_kb_models_size_start, \
-    inline_kb_low_models_start, inline_kb_large_models_start
+    inline_kb_low_models_start, inline_kb_large_models_start, inline_kb_mode
 
 import utils
-
-
-
-
 
 
 
@@ -36,6 +32,25 @@ dp = Dispatcher(bot, loop=loop)
 async def process_start_command(message: types.Message):
     utils.add_chat(message.chat.id)
     await bot.send_message(message.chat.id, 'Choose action', reply_markup=inline_kb)
+
+# Mode
+@dp.callback_query_handler(lambda c: c.data == 'button_mode')
+async def process_callback_show(callback_query: types.CallbackQuery):
+    await bot.answer_callback_query(callback_query.id)
+    await bot.send_message(callback_query.from_user.id, 'Set mode', reply_markup=inline_kb_mode)
+
+@dp.callback_query_handler(lambda c: c.data == 'button_manual')
+async def process_callback_model_show_cur(callback_query: types.CallbackQuery):
+    await bot.answer_callback_query(callback_query.id)
+    utils.set_mode("manual")
+    await bot.send_message(callback_query.from_user.id, 'Choose action', reply_markup=inline_kb)
+
+@dp.callback_query_handler(lambda c: c.data == 'button_auto_restart')
+async def process_callback_model_show_cur(callback_query: types.CallbackQuery):
+    await bot.answer_callback_query(callback_query.id)
+    utils.set_mode("auto")
+    await bot.send_message(callback_query.from_user.id, 'Choose action', reply_markup=inline_kb)
+
 
 
 # Show
@@ -92,22 +107,38 @@ async def process_callback_model_start_cur(callback_query: types.CallbackQuery):
 
 
 def get_exception():
+    try:
+        while True:
+            time.sleep(UPDATE_PERIOD)
+            # writting exceptions
+            with open("./bot_logs.json", "r") as f: # fix
+                json_ = json.load(f)
 
-    while True:
-        time.sleep(UPDATE_PERIOD)
-        # writting exceptions
-        with open("./bot_logs.json", "r") as f: # fix
+            if json_["error"]:
+                if json_["mode"] == "auto" and json_["cur_model"] != "":
+                    message_handle = Process(target=utils.start_train, args=(json_["cur_model"],))
+                    message_handle.start()
+
+                chats = utils.get_chats()
+                if chats:
+                    for chat in chats:
+                        _ = requests.get(API_LINK + f"sendMessage?chat_id={chat}&text={json_['error']}")
+                        if json_["mode"] == "auto" and json_["cur_model"] != "":
+                            _ = requests.get(API_LINK + f"sendMessage?chat_id={chat}&text=Train restarted")
+
+
+                json_['error'] = 0
+                with open("./bot_logs.json", "w") as f: # fix
+                    json.dump(json_, f)
+
+    except KeyboardInterrupt as e:
+        with open("./bot_logs.json", "r") as f:  # fix
             json_ = json.load(f)
+        json_["cur_model"] = ""
+        with open("./bot_logs.json", "w") as f:  # fix
+            json.dump(json_, f)
 
-        if json_["error"]:
-            chats = utils.get_chats()
-            if chats:
-                for chat in chats:
-                    _ = requests.get(API_LINK + f"sendMessage?chat_id={chat}&text={json_['error']}")
 
-            json_['error'] = 0
-            with open("./bot_logs.json", "w") as f: # fix
-                json.dump(json_, f)
 
 
 def main():
